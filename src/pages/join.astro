@@ -1,0 +1,25 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+const code = Astro.url.searchParams.get('code') ?? '';
+---
+<AppLayout title="Join">
+  <h1>Join the group</h1>
+  <p>You need an invite code from a member.</p>
+  <input id="code" placeholder="Invite code" value={code} />
+  <input id="name" placeholder="Full name" />
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password (8+ characters)" />
+  <button id="go">Create account</button>
+  <p id="msg" class="err"></p>
+</AppLayout>
+<script is:inline>
+  document.getElementById('go').onclick = async () => {
+    const res = await fetch('/api/signup', {
+      method: 'POST',
+      body: JSON.stringify({ code: code.value, name: name.value, email: email.value, password: password.value }),
+    });
+    const d = await res.json();
+    if (d.ok) location.href = '/login';
+    else msg.textContent = d.error;
+  };
+</script>
