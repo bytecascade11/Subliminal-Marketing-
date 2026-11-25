@@ -1,0 +1,48 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+
+// Fake data only. No Supabase, no login.
+const me = { full_name: 'Demo Member', status: 'approved', is_admin: true };
+const invites = [
+  { code: 'AJO-7F3K9Q2L', used: true },
+  { code: 'AJO-B81XM04D', used: false },
+];
+const pending = [
+  { id: '1', full_name: 'Ada Okafor', referred: 'Demo Member' },
+  { id: '2', full_name: 'Tunde Bello', referred: 'Chika Eze' },
+];
+---
+<AppLayout title="Preview">
+  <meta name="robots" content="noindex" />
+  <p class="err"><b>PREVIEW ONLY.</b> Fake data. Delete this page before real use.</p>
+
+  <h1>Hi, {me.full_name}</h1>
+
+  <div class="card">
+    <h3>Pending account (what new members see)</h3>
+    <p>Your account is waiting for approval by an admin. You'll get access once you're confirmed.</p>
+  </div>
+
+  <div class="card">
+    <h3>Invite a member</h3>
+    <p>Only invite people you know in person or from the real group chat.</p>
+    <button onclick="alert('Preview: this would create a code')">Create invite code</button>
+    <ul>
+      {invites.map((i) => <li>{i.code} {i.used ? '(used)' : '(unused)'}</li>)}
+    </ul>
+  </div>
+
+  <h2>Admin: pending members</h2>
+  {pending.map((p) => (
+    <div class="card">
+      <b>{p.full_name}</b><br />
+      Referred by: {p.referred}
+      <div class="row">
+        <button onclick="alert('Preview: approved')">Approve</button>
+        <button onclick="alert('Preview: rejected')">Reject</button>
+      </div>
+    </div>
+  ))}
+
+  <p><a href="/login">Login page</a> · <a href="/join">Join page</a></p>
+</AppLayout>
