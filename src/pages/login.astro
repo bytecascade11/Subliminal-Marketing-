@@ -1,0 +1,22 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+---
+<AppLayout title="Login">
+  <h1>Login</h1>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button id="go">Login</button>
+  <p id="msg" class="err"></p>
+  <p>Have an invite code? <a href="/join">Join here</a></p>
+</AppLayout>
+<script is:inline>
+  document.getElementById('go').onclick = async () => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: email.value, password: password.value }),
+    });
+    const d = await res.json();
+    if (d.ok) location.href = '/dashboard';
+    else msg.textContent = d.error;
+  };
+</script>
