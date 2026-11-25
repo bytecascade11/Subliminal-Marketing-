@@ -1,0 +1,43 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { getSession } from '../lib/auth';
+import { supabaseAdmin } from '../lib/supabase';
+
+const s = await getSession(Astro.cookies);
+if (!s || !s.profile.is_admin) return Astro.redirect('/dashboard');
+
+const { data: pending } = await supabaseAdmin
+  .from('profiles').select('id, full_name, referred_by').eq('status', 'pending');
+
+const refIds = (pending ?? []).map((p) => p.referred_by).filter(Boolean);
+const { data: refs } = refIds.length
+  ? await supabaseAdmin.from('profiles').select('id, full_name').in('id', refIds)
+  : { data: [] };
+const nameOf = (id: string) => refs?.find((r) => r.id === id)?.full_name ?? 'Unknown';
+---
+<AppLayout title="Admin">
+  <h1>Pending members</h1>
+  {(pending ?? []).length === 0 && <p>No one is waiting.</p>}
+  {(pending ?? []).map((p) => (
+    <div class="card">
+      <b>{p.full_name}</b><br />
+      Referred by: {nameOf(p.referred_by)}
+      <div class="row">
+        <button data-id={p.id} data-a="approve">Approve</button>
+        <button data-id={p.id} data-a="reject">Reject</button>
+      </div>
+    </div>
+  ))}
+  <p><a href="/dashboard">Back</a></p>
+</AppLayout>
+<script is:inline>
+  document.querySelectorAll('button[data-id]').forEach((b) => {
+    b.onclick = async () => {
+      await fetch('/api/approve', {
+        method: 'POST',
+        body: JSON.stringify({ id: b.dataset.id, action: b.dataset.a }),
+      });
+      location.reload();
+    };
+  });
+</script>
