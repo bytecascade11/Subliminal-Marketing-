@@ -1,0 +1,50 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { getSession } from '../lib/auth';
+import { supabaseAdmin } from '../lib/supabase';
+
+const s = await getSession(Astro.cookies);
+if (!s) return Astro.redirect('/login');
+const { profile } = s;
+const approved = profile.status === 'approved';
+
+let myInvites: any[] = [];
+if (approved) {
+  const { data } = await supabaseAdmin
+    .from('invites').select('code, used_at').eq('created_by', s.userId).order('code');
+  myInvites = data ?? [];
+}
+---
+<AppLayout title="Dashboard">
+  <h1>Hi, {profile.full_name}</h1>
+
+  {profile.status === 'pending' && (
+    <div class="card">Your account is waiting for approval by an admin. You'll get access once you're confirmed.</div>
+  )}
+  {profile.status === 'rejected' && <div class="card">Your request was not approved.</div>}
+
+  {approved && (
+    <div class="card">
+      <h3>Invite a member</h3>
+      <p>Only invite people you know in person or from the real group chat.</p>
+      <button id="inv">Create invite code</button>
+      <p id="msg"></p>
+      <ul>
+        {myInvites.map((i) => <li>{i.code} {i.used_at ? '(used)' : '(unused)'}</li>)}
+      </ul>
+    </div>
+  )}
+
+  {profile.is_admin && <p><a href="/admin">Admin: approve members</a></p>}
+
+  <form method="POST" action="/api/logout"><button>Logout</button></form>
+</AppLayout>
+<script is:inline>
+  const b = document.getElementById('inv');
+  if (b) b.onclick = async () => {
+    const res = await fetch('/api/invite', { method: 'POST' });
+    const d = await res.json();
+    msg.textContent = d.code ? 'New code: ' + d.code : d.error;
+    if (d.code) setTimeout(() => location.reload(), 1500);
+  };
+</script>
